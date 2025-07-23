@@ -13,22 +13,47 @@ logger = logging.getLogger(__name__)
 def get_mega_links() -> List[Dict[str, str]]:
     """
     Scan os.environ for all MEGA_LINK_<NAME>=<URL> entries
-    and return [{'name': NAME, 'url': URL}, ...].
+    and return only those that both parse and return a node list successfully.
     """
-    links = []
+    valid_links: List[Dict[str, str]] = []
     prefix = "MEGA_LINK_"
+
     for key, val in os.environ.items():
-        if key.startswith(prefix) and val.strip():
-            name = key[len(prefix):]
-            url = val.strip()
-            links.append({"name": name, "url": url})
-            logger.info("Registered MEGA link %s → %s", name, url)
-        elif key.startswith(prefix):
-            logger.warning(f"Environment variable {key} is empty; skipping")
-    if not links:
-        logger.error("No MEGA links defined! Add MEGA_LINK_<NAME>=<URL> to environment.")
-        raise ValueError("No MEGA links defined in environment")
-    return links
+        # only consider MEGA_LINK_ vars
+        if not key.startswith(prefix):
+            continue
+
+        name = key[len(prefix):]
+        url = val.strip()
+
+        # empty?
+        if not url:
+            logger.warning("Environment variable %s is empty; skipping", key)
+            continue
+
+        # 1) parse to extract root & key
+        try:
+            root, key_bytes = parse_folder_url(url)
+        except Exception as e:
+            logger.error("Invalid MEGA URL for %s (%s): %s", name, url, e)
+            continue
+
+        # 2) smoke-test the API to ensure it exists/returns nodes
+        try:
+            get_nodes(root)
+        except Exception as e:
+            logger.error("Failed to fetch MEGA folder %s (%s): %s", name, url, e)
+            continue
+
+        # passed both checks—keep it
+        logger.info("Registered & verified MEGA link %s → %s", name, url)
+        valid_links.append({"name": name, "url": url})
+
+    if not valid_links:
+        logger.critical("No valid MEGA links found! Check your MEGA_LINK_* settings.")
+        raise ValueError("No valid MEGA links defined in environment")
+
+    return valid_links
 
 
 def sanitize(name: str) -> str:
