@@ -25,7 +25,7 @@ A lightweight bot that monitors public MEGA.nz folders and sends updates to a Di
 services:
   mega-monitor:
     container_name: mega-monitor
-    image: ghcr.io/xmacj/mega-monitor:latest
+    image: ghcr.io/mega-monitor/mega-monitor:latest
     environment:
       - MEGA_LINK_DEMO1=https://mega.nz/folder/albums # The link to the Mega folder
       - MEGA_LINK_DEMO2=https://mega.nz/folder/movies # Optional additional links
