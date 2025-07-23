@@ -6,6 +6,7 @@ import logging
 from datetime import datetime
 from zoneinfo import ZoneInfo
 import requests
+from requests.exceptions import HTTPError
 
 from .config import settings
 from .mega_client import sanitize
@@ -34,22 +35,85 @@ def notify_discord(name: str, url: str, new_items: list, renamed_items: list, de
     for d in deleted_items: writer.writerow({'Change':'DELETED','Path':d['path']})
     csv_data = output.getvalue()
 
-    content = f"[{name}]({url}) {mentions}\n**{summary}** — {timestamp} — see attached CSV."
-    resp = requests.post(
-        settings.discord_webhook_url,
-        data={"content": content},
-        files={"file": (f"{sanitize(name)}.csv", csv_data, "text/csv")},
-        timeout=(3.05, 30)
-    )
-    logger.debug(
-        "Sending Discord notification for %s → %d new / %d renamed / %d deleted",
-        name, len(new_items), len(renamed_items), len(deleted_items)
-    )
+    content = f"{mentions}\n[{name}]({url}) **{summary}** — {timestamp}"
+    payload = {
+        "content": content,
+        "flags": 4  # suppress link previews
+    }
+
     try:
+        resp = requests.post(
+            settings.discord_webhook_url,
+            data={"payload_json": json.dumps(payload)},
+            files={
+                "file": (
+                    f"{sanitize(name)}.csv",
+                    csv_data,
+                    "text/csv"
+                )
+            },
+            timeout=(3.05, 30)
+        )
         resp.raise_for_status()
-        logger.debug("Discord webhook accepted for %s (status %s)", name, resp.status_code)
+        logger.debug(
+            "Discord webhook accepted for %s → %d new / %d renamed / %d deleted (status %s)",
+            name, len(new_items), len(renamed_items), len(deleted_items), resp.status_code
+        )
+
+    except HTTPError as e:
+        status = e.response.status_code if e.response is not None else None
+
+        if status == 401:
+            logger.error(
+                "401 Unauthorized: Invalid webhook URL or credentials. Please check your DISCORD_WEBHOOK_URL."
+            )
+            return
+
+        elif status == 403:
+            logger.error(
+                "403 Forbidden: The webhook exists but you don’t have permission to post. " 
+                "Verify the webhook’s channel permissions."
+            )
+            return
+
+        elif status == 404:
+            logger.error(
+                "404 Not Found: The webhook URL is invalid or has been deleted. "
+                "Please verify the URL."
+            )
+            return
+
+        elif status == 429:
+            logger.warning(
+                "429 Too Many Requests: rate limited by Discord. Discord will auto‑retry this webhook."
+            )
+            return
+
+        elif 400 <= status < 500:
+            logger.error(
+                "Client error %s: Payload rejected. Check your message content and webhook URL.",
+                status
+            )
+            return
+
+        elif 500 <= status < 600:
+            logger.error(
+                "Server error %s: Discord is having issues. "
+                "This notification will retry on the next run.",
+                status
+            )
+            return
+
+        else:
+            # Fallback for anything unexpected
+            logger.exception(
+                "Unexpected HTTP error %s when sending to Discord webhook for %s.",
+                status, name
+            )
+            raise
+
     except Exception:
-        logger.exception("Discord webhook failed for %s", name)
+        logger.exception("Non-HTTP error sending Discord notification for %s", name)
         raise
 
 

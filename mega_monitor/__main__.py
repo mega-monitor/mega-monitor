@@ -25,10 +25,10 @@ if env_file.exists():
 
 
 OPTIONALS: Dict[str, Tuple[str, str]] = {
-    "LOG_LEVEL": ("INFO", "%s"),  # handled above but keep note
+    "LOG_LEVEL": ("INFO", "%s"),
     "TIMEZONE": ("UTC", "%s"),
-    "CHECK_INTERVAL_SECONDS": ("600", "%ss"),
-    "MENTION_USER_IDS": ("", "%s"),  # empty string is fine
+    "CHECK_INTERVAL_SECONDS": ("3600", "%ss"),
+    "MENTION_USER_IDS": ("", "%s"),
 }
 
 
@@ -38,7 +38,7 @@ def announce_defaults() -> None:
         env_has_value = var in os.environ
         val = os.getenv(var, default)
 
-        if env_has_value:  # user provided it
+        if env_has_value:
             log.info("%s set → " + fmt, var, val)
         elif val == "":  # default is empty str
             log.info("%s defaulting to empty", var)
