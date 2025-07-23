@@ -42,7 +42,7 @@ async def monitor_folder(name: str, url: str, state_dir: Path):
         deleted = [prev_map[h] for h in prev_map if h not in curr_map]
 
         if new_items or renamed or deleted:
-            notify_discord(name, new_items, renamed, deleted)
+            notify_discord(name, url, new_items, renamed, deleted)
             save_state(current, state_file)
             logger.info(
                 "%s → %d new / %d renamed / %d deleted (state saved)",

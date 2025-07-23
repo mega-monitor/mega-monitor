@@ -16,7 +16,7 @@ def format_mentions() -> str:
     return ' '.join(f"<@{uid}>" for uid in settings.mention_user_ids)
 
 
-def notify_discord(name: str, new_items: list, renamed_items: list, deleted_items: list):
+def notify_discord(name: str, url: str, new_items: list, renamed_items: list, deleted_items: list):
     mentions = format_mentions()
     parts = []
     if new_items: parts.append(f"{len(new_items)} New")
@@ -34,7 +34,7 @@ def notify_discord(name: str, new_items: list, renamed_items: list, deleted_item
     for d in deleted_items: writer.writerow({'Change':'DELETED','Path':d['path']})
     csv_data = output.getvalue()
 
-    content = f"`{name}` {mentions}\n**{summary}** — {timestamp} — see attached CSV."
+    content = f"[{name}]({url}) {mentions}\n**{summary}** — {timestamp} — see attached CSV."
     resp = requests.post(
         settings.discord_webhook_url,
         data={"content": content},
