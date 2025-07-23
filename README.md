@@ -75,3 +75,15 @@ pip install -r requirements.txt
 ```bash
 python -m mega_monitor
 ```
+
+## 👩‍💻 Contributing & Support
+
+Feel free to [open an issue](https://github.com/mega-monitor/mega-monitor/issues) if you hit any snags.
+
+To contribute:
+
+1. Fork the repository.  
+2. Create a new branch from `master` with a descriptive name.  
+3. Commit your changes and open a [Pull Request](https://github.com/mega-monitor/mega-monitor/pulls), detailing your feature or fix.
+
+Thank you for helping improve Mega monitor!
