@@ -6,7 +6,7 @@ from pydantic import AnyUrl, Field, Extra
 
 class Settings(BaseSettings):
     discord_webhook_url: AnyUrl
-    check_interval_seconds: int = 600
+    check_interval_seconds: int = 3600  # 10 minutes
     log_level: str = "INFO"
 
     # Load the raw ENV string if present; .env might not include this
