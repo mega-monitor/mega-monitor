@@ -44,26 +44,31 @@ services:
 
 ## 👨‍💻 Manual Python Usage
 
-1. Clone the repo and install dependencies:
+1. Clone the repo and setup dependencies:
 
 ```bash
-git clone https://github.com/xmacj/mega-monitor.git
+git clone https://github.com/mega-monitor/mega-monitor.git
 cd mega-monitor
-pip install -r requirements.txt
-
 ```
 
 2. Create a `.env` file in the root directory:
 
 ```env
 MEGA_LINK_DEMO1=https://mega.nz/folder/songs
-MEGA_LINK_DEMO2=https://mega.nz/folder/movies
+# MEGA_LINK_DEMO2=https://mega.nz/folder/movies
 DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/xxx/yyy
 MENTION_USER_IDS=123456789012345678,987654321098765432
 CHECK_INTERVAL_SECONDS=600
 LOG_LEVEL=INFO
 TIMEZONE=America/New_York
 ```
+
+3. Install the Python dependencies:
+
+```bash
+pip install -r requirements.txt
+```
+
 
 3. Run the script:
 
