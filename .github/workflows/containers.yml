@@ -38,4 +38,4 @@ jobs:
           push: true
           tags: |
             ghcr.io/${{ steps.vars.outputs.owner }}/mega-monitor:${{ github.ref_name }}
-            ghcr.io/${{ steps.vars.outputs.owner }}/wmega-monitor:latest
+            ghcr.io/${{ steps.vars.outputs.owner }}/mega-monitor:latest
