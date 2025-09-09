@@ -1,13 +1,13 @@
-name: Build & publish containers
+name: Build & publish mega-monitor container
 
 on:
   push:
-    tags: ['v*.*.*']          
-  workflow_dispatch:          
+    tags: ['v*.*.*']
+  workflow_dispatch:
 
 permissions:
-  packages: write             
   contents: read
+  packages: write
 
 jobs:
   build:
@@ -25,17 +25,20 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Derive lower‑case owner
+      - name: Derive lower-case owner
         id: vars
         run: echo "owner=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_OUTPUT"
 
-
-      - name: Build & push mega-monitor container
+      - name: Build & push multi-arch image
         uses: docker/build-push-action@v5
         with:
           context: .
           file: Dockerfile
+          platforms: linux/amd64,linux/arm64
           push: true
           tags: |
             ghcr.io/${{ steps.vars.outputs.owner }}/mega-monitor:${{ github.ref_name }}
             ghcr.io/${{ steps.vars.outputs.owner }}/mega-monitor:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          provenance: false
