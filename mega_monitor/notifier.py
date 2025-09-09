@@ -1,11 +1,13 @@
 from __future__ import annotations
-import csv, io, json, traceback
+import csv
+import io
+import json
+import traceback
 from datetime import datetime
 from typing import Dict, Tuple, Optional, Union
 from zoneinfo import ZoneInfo
 import requests
-from requests import HTTPError
-
+from requests.exceptions import HTTPError
 from .config import settings
 from .state_manager import logger
 from .mega_client import sanitize
@@ -100,7 +102,7 @@ def notify_discord(name: str, url: str, new_items: list, renamed_items: list, de
     output = io.StringIO()
     writer = csv.DictWriter(output, fieldnames=['Change','Path','Old Path','New Path','Size'])
     writer.writeheader()
-    for f in new_items: writer.writerow({'Change':'NEW','Path':f['path'],'Size':f.get('size')})
+    for f in new_items: writer.writerow({'Change':'NEW','Path':f['path'],'Size':f.get('size', "")})
     for old,new in renamed_items: writer.writerow({'Change':'RENAMED','Old Path':old,'New Path':new})
     for d in deleted_items: writer.writerow({'Change':'DELETED','Path':d['path']})
     csv_data = output.getvalue()
