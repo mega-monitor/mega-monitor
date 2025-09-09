@@ -122,30 +122,27 @@ def notify_discord(name: str, url: str, new_items: list, renamed_items: list, de
             name, len(new_items), len(renamed_items), len(deleted_items), resp.status_code
         )
 
-def notify_error(name: str, exc: Exception):
-    tb = traceback.format_exc()
-    now = datetime.now(ZoneInfo(settings.timezone))
-    timestamp = now.strftime("%B %d, %Y %I:%M:%S %p %Z")
-    content = f"[{name}] 🚨 Error — {timestamp}: {exc}"
-    post_webhook(
-        content,
-        files={"file": (f"{sanitize(name)}_error.txt", tb, "text/plain")},
-        flags=SUPPRESS_EMBEDS,
-        prepend_mentions=True,
-    )
-    logger.error("Error encountered in %s: %s", name, exc)
-
 def notify_unavailable(name: str, url: str, code: int, reason: str, *, fast: bool = False):
     now = datetime.now(ZoneInfo(settings.timezone))
     timestamp = now.strftime("%B %d, %Y %I:%M:%S %p %Z")
-    # Angle brackets also prevent unfurl; flags is the main lever though.
     content = f"[{name}] ⚠️ Link unavailable — {timestamp}\nCode {code}: {reason}\n<{url}>"
-    post_webhook(content, flags=SUPPRESS_EMBEDS, fast=fast)
+    post_webhook(
+        content,
+        flags=SUPPRESS_EMBEDS,
+        fast=fast,
+        prepend_mentions=True,
+    )
     logger.warning("Unavailable: %s (code=%s) %s", name, code, reason)
+
 
 def notify_startup_summary(reports, *, fast: bool = False):
     now = datetime.now(ZoneInfo(settings.timezone))
     ts = now.strftime("%B %d, %Y %I:%M:%S %p %Z")
     lines = [f"• [{r.name}] code {r.code}: {r.reason}\n<{r.url}>" for r in reports]
     content = f"⚠️ Startup blocked — {ts}\nNo valid MEGA links found. Details:\n" + "\n".join(lines)
-    post_webhook(content, flags=SUPPRESS_EMBEDS, fast=fast)
+    post_webhook(
+        content,
+        flags=SUPPRESS_EMBEDS,
+        fast=fast,
+        prepend_mentions=True,
+    )
