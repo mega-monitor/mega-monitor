@@ -12,7 +12,6 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
 
@@ -39,6 +38,10 @@ jobs:
           tags: |
             ghcr.io/${{ steps.vars.outputs.owner }}/mega-monitor:${{ github.ref_name }}
             ghcr.io/${{ steps.vars.outputs.owner }}/mega-monitor:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: |
+            type=gha,scope=mega-monitor
+            type=registry,ref=ghcr.io/${{ steps.vars.outputs.owner }}/mega-monitor:buildcache
+          cache-to: |
+            type=gha,mode=max,scope=mega-monitor
+            type=registry,ref=ghcr.io/${{ steps.vars.outputs.owner }}/mega-monitor:buildcache,mode=max
           provenance: false
