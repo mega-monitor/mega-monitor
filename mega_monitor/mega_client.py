@@ -29,13 +29,6 @@ class NoValidLinksError(ValueError):
         self.reports = reports
 
 
-class MegaAPIError(Exception):
-    def __init__(self, code: int, message: str):
-        super().__init__(f"MEGA API error {code}: {message}")
-        self.code = code
-        self.message = message
-
-
 _ERROR_MAP = {
     -2: "EARGS: Invalid arguments",
     -3: "EAGAIN: Try again (temporary)",
