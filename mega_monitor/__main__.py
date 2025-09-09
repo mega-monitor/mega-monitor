@@ -1,10 +1,12 @@
 from __future__ import annotations
-import os, sys, logging, asyncio
+import os, sys, logging, asyncio, signal
 from pathlib import Path
 from typing import Dict, Tuple
 from dotenv import load_dotenv
 from pydantic import ValidationError
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
+from .notifier import notify_startup_summary
+from .mega_client import NoValidLinksError
 
 
 # ── 1. logging ────────────────────────────────────────────────────────────
@@ -97,12 +99,28 @@ async def _main() -> None:
     await run_monitor()
 
 
+async def idle_until_signaled() -> None:
+    """Block until SIGTERM/SIGINT; works in containers."""
+    stop = asyncio.Event()
+    loop = asyncio.get_running_loop()
+    for sig in (signal.SIGTERM, signal.SIGINT):
+        try:
+            loop.add_signal_handler(sig, stop.set)
+        except NotImplementedError:
+            def _handler(signum, frame):
+                try:
+                    loop.call_soon_threadsafe(stop.set)
+                except RuntimeError:
+                    pass
+            signal.signal(sig, _handler)
+
+    await stop.wait()
+
 if __name__ == "__main__":
     try:
         asyncio.run(_main())
-    except ValueError as e:
-        log.critical("Configuration error: %s", e)
-        asyncio.run(asyncio.Event().wait())
-    except KeyboardInterrupt:
-        log.info("Interrupted – shutting down")
+    except NoValidLinksError as e:
+        log.critical("Configuration error: No valid MEGA links")
+        notify_startup_summary(e.reports, fast=True)
+        asyncio.run(idle_until_signaled())
         sys.exit(0)

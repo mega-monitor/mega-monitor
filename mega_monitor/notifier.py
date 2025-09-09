@@ -129,3 +129,35 @@ def notify_error(name: str, exc: Exception):
         files={"file": (f"{sanitize(name)}_error.txt", tb, "text/plain")},
         timeout=(3.05, 30)
     )
+    
+def notify_unavailable(name: str, url: str, code: int, reason: str):
+    now = datetime.now(ZoneInfo(settings.timezone))
+    timestamp = now.strftime("%B %d, %Y %I:%M:%S %p %Z")
+    content = f"[{name}] ⚠️ Link unavailable — {timestamp}\n" \
+              f"Code {code}: {reason}\n{url}"
+    logger.warning("Unavailable: %s (%s) %s", name, code, reason)
+    requests.post(settings.discord_webhook_url, data={"content": content}, timeout=(3.05, 30))
+    
+def _post_webhook(content: str, timeout=(3.05, 30)):
+    try:
+        requests.post(
+            settings.discord_webhook_url,
+            data={"content": content},
+            timeout=timeout,
+        )
+    except Exception as e:
+        logger.debug("Startup webhook send skipped: %s", e)
+
+def notify_startup_summary(reports, *, fast: bool = False):
+    from datetime import datetime
+    from zoneinfo import ZoneInfo
+
+    now = datetime.now(ZoneInfo(settings.timezone))
+    ts = now.strftime("%B %d, %Y %I:%M:%S %p %Z")
+    lines = [f"• [{r.name}] code {r.code}: {r.reason}\n{r.url}" for r in reports]
+    content = (
+        f"⚠️ Startup blocked — {ts}\n"
+        "No valid MEGA links found. Details:\n" + "\n".join(lines)
+    )
+    timeout = (0.5, 2) if fast else (3.05, 30)
+    _post_webhook(content, timeout=timeout)
