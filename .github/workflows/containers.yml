@@ -40,8 +40,9 @@ jobs:
             ghcr.io/${{ steps.vars.outputs.owner }}/mega-monitor:latest
           cache-from: |
             type=gha,scope=mega-monitor
-            type=registry,ref=ghcr.io/${{ steps.vars.outputs.owner }}/mega-monitor:buildcache
+            # (optional) also reuse cache embedded in latest image
+            type=registry,ref=ghcr.io/${{ steps.vars.outputs.owner }}/mega-monitor:latest
           cache-to: |
             type=gha,mode=max,scope=mega-monitor
-            type=registry,ref=ghcr.io/${{ steps.vars.outputs.owner }}/mega-monitor:buildcache,mode=max
+            type=inline
           provenance: false
